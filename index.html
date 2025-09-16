@@ -7,9 +7,11 @@
 
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- jsPDF + autoTable para exportar PDF -->
+<!-- jsPDF + autoTable -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<!-- Font Awesome para ícones -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
 <style>
 :root{
@@ -23,15 +25,23 @@ body{margin:0;font-family:Inter,Segoe UI,Arial;background:var(--bg);color:#222;m
 header{background:#fff;padding:12px 18px;box-shadow:0 2px 6px rgba(0,0,0,.06);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
 header img{height:44px}
 header h1{font-size:18px;margin:0;color:var(--primary)}
-main{flex:1;display:flex;gap:18px;padding:18px;max-width:1600px;margin:18px auto;width:95%} /* Ajustado para telas grandes */
-nav{width:220px;background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+main{
+  flex:1;
+  display:flex;
+  gap:18px;
+  padding:18px;
+  max-width:1900px;
+  margin:18px auto;
+  width:98%;
+}
+nav{width:240px;background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.04)}
 nav .user{font-weight:700;margin-bottom:10px}
 nav ul{list-style:none;padding:0;margin:0}
 nav li{padding:10px;border-radius:8px;cursor:pointer;color:var(--primary);font-weight:600}
 nav li.active{background:var(--primary);color:#fff}
 section.container{flex:1;min-height:400px;display:flex;flex-direction:column;gap:18px;overflow-y:auto}
 .card{background:var(--card);padding:14px;border-radius:10px;margin-bottom:14px;display:flex;flex-direction:column;gap:12px}
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;align-items:start} /* Aumentado para cards maiores */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:18px;align-items:start}
 .login-wrap{max-width:480px;margin:60px auto;background:#fff;padding:24px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.06)}
 .field{margin-bottom:12px}
 label{display:block;font-weight:700;margin-bottom:6px}
@@ -42,11 +52,18 @@ footer{padding:12px;text-align:center;color:var(--muted)}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .small{font-size:13px;color:var(--muted)}
 
-/* ======= AJUSTES PROPORCIONAIS ======= */
-.card canvas{width:100% !important; min-height:180px; max-height:300px}
-#dashCharts .card{min-height:300px}
-@media(max-width:900px){main{flex-direction:column;padding:12px}nav{width:100%;order:2}section.container{order:1}}
-@media(max-width:600px){.grid2,#dashCharts{grid-template-columns:1fr}.card canvas{min-height:200px}}
+.card h2{font-size:1rem;font-weight:600;display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.card canvas{width:100% !important; min-height:200px; max-height:320px}
+#dashCharts .card{min-height:320px}
+
+@media(max-width:900px){
+  main{flex-direction:column;padding:12px}
+  nav{width:100%;order:2}
+  section.container{order:1}
+}
+@media(max-width:600px){
+  .grid2,#dashCharts{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -57,25 +74,24 @@ footer{padding:12px;text-align:center;color:var(--muted)}
 </header>
 
 <main>
-  <!-- Login screen -->
+  <!-- Login -->
   <div id="loginScreen" class="login-wrap" style="display:none">
     <h2>Login Admin</h2>
     <div class="field">
       <label>Usuário</label>
-      <input id="loginUser" type="text" value="">
+      <input id="loginUser" type="text">
     </div>
     <div class="field">
       <label>Senha</label>
-      <input id="loginPass" type="password" value="">
+      <input id="loginPass" type="password">
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button id="btnLogin">Entrar</button>
-      <div class="small"></b></div>
     </div>
     <div id="loginMessage" style="color:red;margin-top:10px"></div>
   </div>
 
-  <!-- App layout -->
+  <!-- Sidebar -->
   <nav id="sidebar" style="display:none">
     <div class="user">Admin</div>
     <ul>
@@ -86,133 +102,125 @@ footer{padding:12px;text-align:center;color:var(--muted)}
     </ul>
   </nav>
 
+  <!-- Conteúdo -->
   <section class="container" id="app" style="display:none">
-    <!-- INICIO -->
+    
+    <!-- Página Início -->
     <div id="pageInicio">
-      <div class="card">
-        <h3>Resumo geral</h3>
-        <div class="grid2">
-          <div class="card">
-            <h4>Itens por Área</h4>
-            <canvas id="chartByArea"></canvas>
-          </div>
-          <div class="card">
-            <h4>Preenchimentos (Total)</h4>
-            <canvas id="chartCount"></canvas>
-          </div>
+      <section class="grid2">
+        <div class="card">
+          <h2><i class="fas fa-tshirt text-blue-600"></i> Uniformes por Tipo</h2>
+          <canvas id="chartTipoUniforme"></canvas>
         </div>
-      </div>
+        <div class="card">
+          <h2><i class="fas fa-users text-green-600"></i> Uniformes por Área</h2>
+          <canvas id="chartUniformeArea"></canvas>
+        </div>
+        <div class="card">
+          <h2><i class="fas fa-user-check text-emerald-600"></i> Colaboradores Atendidos</h2>
+          <canvas id="chartColaboradores"></canvas>
+        </div>
+        <div class="card">
+          <h2><i class="fas fa-chart-line text-purple-600"></i> Evolução de Entregas</h2>
+          <canvas id="chartEvolucao"></canvas>
+        </div>
+      </section>
     </div>
 
-    <!-- DASHBOARD -->
+    <!-- Página Dashboard -->
     <div id="pageDash" style="display:none">
-      <div class="card">
-        <h3>Dashboard detalhado</h3>
-        <div class="grid2" id="dashCharts"></div>
-      </div>
+      <section id="dashCharts" class="grid2"></section>
     </div>
 
-    <!-- RELATORIO -->
+    <!-- Página Relatórios -->
     <div id="pageRel" style="display:none">
-      <div class="card">
-        <h3>Relatórios & Export</h3>
-        <div class="filters">
-          <select id="filterItem">
-            <option value="">Filtrar por item (todos)</option>
-            <option value="Camisa Preta">Camisa Preta</option>
-            <option value="Camisa Azul">Camisa Azul</option>
-            <option value="Gandola">Gandola</option>
-            <option value="Calça">Calça</option>
-            <option value="Coturno">Coturno</option>
-            <option value="Sapatenis/Sapatilhas">Sapatenis/Sapatilhas</option>
-            <option value="Boné">Boné</option>
-            <option value="Cinto">Cinto</option>
-            <option value="Fivela">Fivela</option>
-            <option value="Blusa Térmica/Casaco">Blusa Térmica/Casaco</option>
-          </select>
-
-          <select id="filterHas">
-            <option value="">Todos (tem / não tem)</option>
-            <option value="Sim">Possui (Sim)</option>
-            <option value="Não">Não possui</option>
-          </select>
-
-          <input id="filterSize" placeholder="Tamanho (ex: M, 38)">
-
-          <button id="btnApply">Aplicar</button>
-          <button id="btnExportPDF">Exportar PDF</button>
-        </div>
-
-        <div class="table-wrap" id="tableWrap">
-          <table id="reportTable" border="1" cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse">
-            <thead id="reportHead"></thead>
-            <tbody id="reportBody"></tbody>
-          </table>
-        </div>
+      <!-- Filtros -->
+      <div class="filters">
+        <input type="text" id="filterNome" placeholder="Filtrar por nome...">
+        <input type="text" id="filterArea" placeholder="Filtrar por área...">
+        <select id="filterItem">
+          <option value="">Filtrar por item...</option>
+          <option value="Gandola">Gandola</option>
+          <option value="Camisa Preta">Camisa Preta</option>
+          <option value="Camisa Azul">Camisa Azul</option>
+          <option value="Calça">Calça</option>
+          <option value="Coturno">Coturno</option>
+          <option value="Sapatênis">Sapatênis</option>
+          <option value="Boné">Boné</option>
+          <option value="Cinto">Cinto</option>
+          <option value="Fivela">Fivela</option>
+          <option value="Blusa Térmica">Blusa Térmica</option>
+        </select>
+        <select id="filterPossui">
+          <option value="">Possui / Não Possui...</option>
+          <option value="sim">Possui</option>
+          <option value="nao">Não Possui</option>
+        </select>
+        <button id="btnExportPDF">Exportar PDF</button>
+      </div>
+      <div class="table-wrap">
+        <table border="1" width="100%" cellspacing="0" cellpadding="4">
+          <thead id="reportHead"></thead>
+          <tbody id="reportBody"></tbody>
+        </table>
       </div>
     </div>
 
   </section>
 </main>
 
-<footer>@Residencial Nascentes 2025 - ByJosué Amaral</footer>
+<footer>@Residencial Nascentes 2025 - By Josué Amaral</footer>
 
 <script>
 (async ()=>{ 
   const scriptURL = "https://script.google.com/macros/s/AKfycbwYtzPaXQRNAp0esjPiukxeIq2eGfv_XlU7PVK1x_L3WMMJ7JxhGHKqdSpwGGMT2_SaGg/exec"; 
+  const ADMIN_USER = "admin", ADMIN_PASS = "Nascentes2025";
 
-  const ADMIN_USER = "admin";
-  const ADMIN_PASS = "Nascentes2025";
+  const loginScreen=document.getElementById("loginScreen");
+  const sidebar=document.getElementById("sidebar");
+  const app=document.getElementById("app");
+  const btnLogin=document.getElementById("btnLogin");
+  const loginUser=document.getElementById("loginUser");
+  const loginPass=document.getElementById("loginPass");
+  const loginMessage=document.getElementById("loginMessage");
+  const logoutBtn=document.getElementById("logout");
+  const navInicio=document.getElementById("navInicio");
+  const navDash=document.getElementById("navDash");
+  const navRel=document.getElementById("navRel");
+  const pageInicio=document.getElementById("pageInicio");
+  const pageDash=document.getElementById("pageDash");
+  const pageRel=document.getElementById("pageRel");
+  const reportHead=document.getElementById("reportHead");
+  const reportBody=document.getElementById("reportBody");
+  const btnExportPDF=document.getElementById("btnExportPDF");
 
-  const loginScreen = document.getElementById("loginScreen");
-  const sidebar = document.getElementById("sidebar");
-  const app = document.getElementById("app");
-  const btnLogin = document.getElementById("btnLogin");
-  const loginUser = document.getElementById("loginUser");
-  const loginPass = document.getElementById("loginPass");
-  const loginMessage = document.getElementById("loginMessage");
-  const logoutBtn = document.getElementById("logout");
-
-  const navInicio = document.getElementById("navInicio");
-  const navDash = document.getElementById("navDash");
-  const navRel = document.getElementById("navRel");
-  const pageInicio = document.getElementById("pageInicio");
-  const pageDash = document.getElementById("pageDash");
-  const pageRel = document.getElementById("pageRel");
-
+  const filterNome = document.getElementById("filterNome");
+  const filterArea = document.getElementById("filterArea");
   const filterItem = document.getElementById("filterItem");
-  const filterHas = document.getElementById("filterHas");
-  const filterSize = document.getElementById("filterSize");
-  const btnApply = document.getElementById("btnApply");
-  const btnExportPDF = document.getElementById("btnExportPDF");
-  const reportHead = document.getElementById("reportHead");
-  const reportBody = document.getElementById("reportBody");
+  const filterPossui = document.getElementById("filterPossui");
 
-  let chartByArea=null, chartCount=null;
   let sheetData={headers:[],rows:[]};
+  let groupedData={};
 
-  function showLogin(){ loginScreen.style.display="block"; sidebar.style.display="none"; app.style.display="none"; }
-  function showApp(){ loginScreen.style.display="none"; sidebar.style.display="block"; app.style.display="block"; }
+  function showLogin(){loginScreen.style.display="block"; sidebar.style.display="none"; app.style.display="none";}
+  function showApp(){loginScreen.style.display="none"; sidebar.style.display="block"; app.style.display="block";}
 
-  if(localStorage.getItem("nascentes_auth")==="1"){ await initApp(); }else{ showLogin(); }
+  if(localStorage.getItem("nascentes_auth")==="1"){await initApp();} else {showLogin();}
 
   btnLogin.addEventListener("click",async ()=>{
-    const u=(loginUser.value||"").trim();
-    const p=(loginPass.value||"").trim();
-    if(u.toLowerCase()===ADMIN_USER && p===ADMIN_PASS){ localStorage.setItem("nascentes_auth","1"); loginMessage.textContent=""; await initApp(); }
-    else loginMessage.textContent="Usuário ou senha incorretos.";
+    if(loginUser.value.toLowerCase()===ADMIN_USER && loginPass.value===ADMIN_PASS){
+      localStorage.setItem("nascentes_auth","1"); loginMessage.textContent=""; await initApp();
+    } else loginMessage.textContent="Usuário ou senha incorretos.";
   });
+  logoutBtn.addEventListener("click",()=>{localStorage.removeItem("nascentes_auth"); location.reload();});
 
-  logoutBtn.addEventListener("click",()=>{ localStorage.removeItem("nascentes_auth"); location.reload(); });
+  navInicio.addEventListener("click",()=>{setActive(navInicio);showPage("inicio");});
+  navDash.addEventListener("click",()=>{setActive(navDash);showPage("dash");});
+  navRel.addEventListener("click",()=>{setActive(navRel);showPage("rel");});
+  function setActive(el){[navInicio,navDash,navRel].forEach(x=>x.classList.remove("active")); el.classList.add("active");}
+  function showPage(p){pageInicio.style.display=p==="inicio"?"block":"none"; pageDash.style.display=p==="dash"?"block":"none"; pageRel.style.display=p==="rel"?"block":"none";}
 
-  navInicio.addEventListener("click",()=>{ setActive(navInicio); showPage("inicio"); });
-  navDash.addEventListener("click",()=>{ setActive(navDash); showPage("dash"); });
-  navRel.addEventListener("click",()=>{ setActive(navRel); showPage("rel"); });
-
-  function setActive(el){ [navInicio,navDash,navRel].forEach(x=>x.classList.remove("active")); el.classList.add("active"); }
-  function showPage(p){ pageInicio.style.display=p==="inicio"?"block":"none"; pageDash.style.display=p==="dash"?"block":"none"; pageRel.style.display=p==="rel"?"block":"none"; }
-
-  async function initApp(){ showApp(); await fetchData(); buildInicio(); buildDash(); buildReportTable(sheetData.rows); }
+  async function initApp(){showApp(); await fetchData(); buildInicio(); buildDash(); buildReportTable(sheetData.rows); setupFilters();}
 
   async function fetchData(){
     try{
@@ -220,114 +228,168 @@ footer{padding:12px;text-align:center;color:var(--muted)}
       const json=await res.json();
       if(json.error) throw new Error(json.error);
       sheetData=json; sheetData.headers=sheetData.headers.map(h=>String(h||""));
-    }catch(err){ alert("Erro ao buscar dados: "+err.message); console.error(err);}
+    }catch(err){alert("Erro ao buscar dados: "+err.message);}
   }
 
+  // -------- INÍCIO (gráficos principais)
   function buildInicio(){
-    const totalFilled=sheetData.rows.filter(r=>(r["Nome"]||r["Nome completo"]||r["Nome"])).length;
-    const byArea={};
-    sheetData.rows.forEach(r=>{
-      const area=r["Área"]||r["Area"]||"Sem área";
-      if(!byArea[area]) byArea[area]=0;
-      const nome=r["Nome"]||r["Nome completo"]||r["Nome"];
-      if(nome && nome.toString().trim()!=="") byArea[area]++;
-    });
-
-    const ctx1=document.getElementById("chartByArea").getContext("2d");
-    if(chartByArea) chartByArea.destroy();
-    chartByArea=new Chart(ctx1,{type:'bar',data:{labels:Object.keys(byArea),datasets:[{label:'Respostas por área',data:Object.values(byArea),backgroundColor:'#0077cc'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
-
-    const ctx2=document.getElementById("chartCount").getContext("2d");
-    if(chartCount) chartCount.destroy();
-    chartCount=new Chart(ctx2,{type:'doughnut',data:{labels:['Preenchidos','Vazios'],datasets:[{data:[totalFilled,Math.max(0,sheetData.rows.length-totalFilled)],backgroundColor:['#0077cc','#ccc']}]},options:{responsive:true,maintainAspectRatio:false}});
-  }
-
-  function buildDash(){
-    const dashRoot=document.getElementById("dashCharts");
-    dashRoot.innerHTML="";
-
-    const items=[
-      {keyPossui:"Gandola Possui",label:"Gandola"},
-      {keyPossui:"Camisa Preta Possui",label:"Camisa Preta"},
-      {keyPossui:"Camisa Azul Possui",label:"Camisa Azul"},
-      {keyPossui:"Calça Possui",label:"Calça"},
-      {keyPossui:"Coturno Possui",label:"Coturno"},
-      {keyPossui:"Sapatênis Possui",label:"Sapatenis/Sapatilhas"},
-      {keyPossui:"Boné Possui",label:"Boné"},
-      {keyPossui:"Cinto Possui",label:"Cinto"},
-      {keyPossui:"Fivela Possui",label:"Fivela"},
-      {keyPossui:"Blusa Térmica Possui",label:"Blusa Térmica"}
-    ];
-
-    items.forEach(item=>{
-      let sim=0,nao=0,total=0;
-      sheetData.rows.forEach(r=>{
-        const v=r[item.keyPossui];
-        if(v!==undefined && v!==null && String(v).trim()!==""){ total++; if(String(v).toLowerCase().indexOf("sim")>=0) sim++; else nao++; }
-      });
-
-      const card=document.createElement("div");
-      card.className="card";
-      card.innerHTML=`<h4>${item.label} — ${total} respostas</h4><canvas></canvas>`;
-      dashRoot.appendChild(card);
-      const ctx=card.querySelector("canvas").getContext("2d");
-      new Chart(ctx,{type:'pie',data:{labels:["Sim","Não"],datasets:[{data:[sim,nao],backgroundColor:['#0077cc','#ccc']}]},options:{responsive:true,maintainAspectRatio:false}});
-    });
-  }
-
-  function buildReportTable(rows){
-    const headers=["Nome","Área","Gandola Possui","Gandola Tamanho","Camisa Preta Possui","Camisa Preta Tamanho","Camisa Azul Possui","Camisa Azul Tamanho","Calça Possui","Calça Tamanho","Coturno Possui","Coturno Tamanho","Sapatênis Possui","Sapatênis Tamanho","Boné Possui","Boné Quantidade","Cinto Possui","Cinto Quantidade","Fivela Possui","Fivela Quantidade","Blusa Térmica Possui","Blusa Térmica Tamanho"];
-    reportHead.innerHTML="<tr>"+headers.map(h=>`<th style='background:#f1f5f9'>${h}</th>`).join("")+"</tr>";
-
-    reportBody.innerHTML="";
-    rows.forEach(r=>{
-      const tr=document.createElement("tr");
-      const cells=headers.map(h=>r[h]!==undefined?r[h]:(r[h.replace("ã","a")]!==undefined?r[h.replace("ã","a")]: ""));
-      tr.innerHTML=cells.map(c=>`<td>${c||""}</td>`).join("");
-      reportBody.appendChild(tr);
-    });
-  }
-
-  btnApply.addEventListener("click",()=>{
-    const itemFilter=filterItem.value;
-    const hasFilter=filterHas.value;
-    const sizeFilter=(filterSize.value||"").trim().toLowerCase();
-
-    const filtered=sheetData.rows.filter(r=>{
-      if(!itemFilter) return true;
-      const mapping={"Camisa Preta":"Camisa Preta Possui","Camisa Azul":"Camisa Azul Possui","Gandola":"Gandola Possui","Calça":"Calça Possui","Coturno":"Coturno Possui","Sapatenis/Sapatilhas":"Sapatênis Possui","Boné":"Boné Possui","Cinto":"Cinto Possui","Fivela":"Fivela Possui","Blusa Térmica/Casaco":"Blusa Térmica Possui"};
-      const keyPossui=mapping[itemFilter]; if(!keyPossui) return true;
-      const valPossui=(r[keyPossui]||"").toString().trim();
-      if(hasFilter==="Sim" && valPossui.toLowerCase()!=="sim") return false;
-      if(hasFilter==="Não" && valPossui.toLowerCase()!=="não") return false;
-      if(sizeFilter){
-        const tKey=keyPossui.replace("Possui","Tamanho");
-        const sizeVal=(r[tKey]||"").toString().trim().toLowerCase();
-        if(!sizeVal.includes(sizeFilter)) return false;
-      }
-      return true;
-    });
-
-    buildReportTable(filtered);
-    setActive(navRel); showPage("rel");
+  const tipos=["Gandola Possui","Camisa Preta Possui","Camisa Azul Possui","Calça Possui","Coturno Possui","Boné Possui","Cinto Possui"];
+  const labelsTipo=["Gandola","Camisa Preta","Camisa Azul","Calça","Coturno","Boné","Cinto"];
+  const countsTipo=labelsTipo.map((lbl,i)=>{
+    let c=0; sheetData.rows.forEach(r=>{if(String(r[tipos[i]]||"").toLowerCase().includes("sim")) c++;});
+    return c;
   });
 
-  btnExportPDF.addEventListener("click",async ()=>{
-    try{
-      const { jsPDF }=window.jspdf;
-      const doc=new jsPDF('l','pt','a4');
-      doc.setFontSize(14);
-      doc.text("Relatório de Uniformes — Residencial Nascentes",40,40);
-      const headers=Array.from(reportHead.querySelectorAll("th")).map(th=>th.textContent);
-      const body=Array.from(reportBody.querySelectorAll("tr")).map(tr=>Array.from(tr.children).map(td=>td.textContent));
-      doc.autoTable({head:[headers],body:body,startY:70,styles:{fontSize:9},headStyles:{fillColor:[0,119,204]}});
-      doc.save("Relatorio_Uniformes.pdf");
-    }catch(err){ alert("Erro ao gerar PDF: "+err.message); }
+  new Chart(document.getElementById("chartTipoUniforme"),{
+    type:"doughnut",
+    data:{labels:labelsTipo,datasets:[{data:countsTipo, backgroundColor:["#3b82f6","#6b7280","#1d4ed8","#10b981","#ef4444","#f59e0b","#8b5cf6"]}]},
+    options:{plugins:{legend:{position:"bottom"}}}
+  });
+
+  // Uniformes por área
+  const areaCounts={};
+  sheetData.rows.forEach(r=>{
+    const area=r["Área"]||"Sem área";
+    if(!areaCounts[area]) areaCounts[area]=0;
+    tipos.forEach(t=>{if(String(r[t]||"").toLowerCase().includes("sim")) areaCounts[area]++;});
+  });
+  new Chart(document.getElementById("chartUniformeArea"),{
+    type:"bar",
+    data:{labels:Object.keys(areaCounts),datasets:[{label:"Itens",data:Object.values(areaCounts),backgroundColor:"#34d399"}]},
+    options:{indexAxis:"y"}
+  });
+
+  // -------- NOVO CARD: Colaboradores que preencheram o link --------
+ // -------- NOVO CARD: Colaboradores que preencheram o link (sem duplicados) --------
+const nomesUnicos = new Set();
+sheetData.rows.forEach(r=>{
+  const nome = r["Nome"] || r["Nome completo"] || null;
+  if(nome) nomesUnicos.add(nome.trim());
+});
+const totalPreencheram = nomesUnicos.size;
+
+const cardColab = document.querySelector("#chartColaboradores").parentNode; // Mantém o mesmo card
+cardColab.innerHTML = `<h2><i class="fas fa-user-check text-emerald-600"></i> Colaboradores que preencheram o link</h2>
+                       <div style="font-size:2rem; font-weight:700; text-align:center; padding:40px 0;">${totalPreencheram}</div>`;
+
+
+  // Evolução (contagem por mês)
+  const evoCounts={};
+  sheetData.rows.forEach(r=>{
+    const d=r["Data"]||""; 
+    if(d){
+      const mes=d.substring(3,5)+"/"+d.substring(6,10);
+      if(!evoCounts[mes]) evoCounts[mes]=0;
+      if(tipos.some(t=>String(r[t]||"").toLowerCase().includes("sim"))) evoCounts[mes]++;
+    }
+  });
+  new Chart(document.getElementById("chartEvolucao"),{
+    type:"line",
+    data:{labels:Object.keys(evoCounts), datasets:[{label:"Entregas", data:Object.values(evoCounts), borderColor:"#8b5cf6", backgroundColor:"#ddd6fe"}]},
+    options:{responsive:true, maintainAspectRatio:false}
+  });
+}
+
+  // -------- DASHBOARD (gráficos por item)
+  function buildDash(){
+    const dashRoot=document.getElementById("dashCharts"); dashRoot.innerHTML="";
+    const items=[{key:"Gandola Possui",label:"Gandola"},{key:"Camisa Preta Possui",label:"Camisa Preta"},{key:"Camisa Azul Possui",label:"Camisa Azul"},{key:"Calça Possui",label:"Calça"},{key:"Coturno Possui",label:"Coturno"},{key:"Sapatênis Possui",label:"Sapatênis/Sapatilhas"},{key:"Boné Possui",label:"Boné"},{key:"Cinto Possui",label:"Cinto"},{key:"Fivela Possui",label:"Fivela"},{key:"Blusa Térmica Possui",label:"Blusa Térmica"}];
+    items.forEach(it=>{
+      let sim=0,nao=0;
+      sheetData.rows.forEach(r=>{
+        const v=r[it.key];
+        if(v){if(String(v).toLowerCase().includes("sim")) sim++; else nao++;}
+      });
+      const card=document.createElement("div");
+      card.className="card"; card.innerHTML=`<h4>${it.label}</h4><canvas></canvas>`;
+      dashRoot.appendChild(card);
+      new Chart(card.querySelector("canvas").getContext("2d"),{type:'pie',data:{labels:["Sim","Não"],datasets:[{data:[sim,nao],backgroundColor:['#0077cc','#ccc']}]},options:{responsive:true,maintainAspectRatio:false}});
+    });
+  }
+
+  // -------- RELATÓRIO
+  // -------- RELATÓRIO (agrupado por colaborador) com numeração
+function buildReportTable(rows){
+  groupedData={};
+  rows.forEach(r=>{
+    const nome=r["Nome"]||r["Nome completo"]||"Sem nome";
+    if(!groupedData[nome]) groupedData[nome]={area:r["Área"]||"Sem área",itens:[]};
+
+    const itens=[
+      {possui:"Gandola Possui",tam:"Gandola Tamanho",label:"Gandola"},
+      {possui:"Camisa Preta Possui",tam:"Camisa Preta Tamanho",label:"Camisa Preta"},
+      {possui:"Camisa Azul Possui",tam:"Camisa Azul Tamanho",label:"Camisa Azul"},
+      {possui:"Calça Possui",tam:"Calça Tamanho",label:"Calça"},
+      {possui:"Coturno Possui",tam:"Coturno Tamanho",label:"Coturno"},
+      {possui:"Sapatênis Possui",tam:"Sapatênis Tamanho",label:"Sapatênis"},
+      {possui:"Boné Possui",tam:"Boné Quantidade",label:"Boné"},
+      {possui:"Cinto Possui",tam:"Cinto Quantidade",label:"Cinto"},
+      {possui:"Fivela Possui",tam:"Fivela Quantidade",label:"Fivela"},
+      {possui:"Blusa Térmica Possui",tam:"Blusa Térmica Tamanho",label:"Blusa Térmica"}
+    ];
+    itens.forEach(it=>{
+      const possui=r[it.possui]||"";
+      const tam=r[it.tam]||"";
+      if(possui||tam) groupedData[nome].itens.push(`${it.label}: ${possui}${tam?` (${tam})`:""}`);
+    });
+  });
+
+  reportHead.innerHTML=`
+    <tr>
+      <th style='background:#f1f5f9'>#</th>
+      <th style='background:#f1f5f9'>Colaborador</th>
+      <th style='background:#f1f5f9'>Área</th>
+      <th style='background:#f1f5f9'>Uniformes</th>
+    </tr>`;
+  
+  reportBody.innerHTML="";
+  let count=1;
+  Object.entries(groupedData).forEach(([nome,data])=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${count}</td><td>${nome}</td><td>${data.area}</td><td>${data.itens.join(", ")}</td>`;
+    reportBody.appendChild(tr);
+    count++;
+  });
+}
+
+  // -------- FILTROS DINÂMICOS
+  function setupFilters(){
+    function applyFilters(){
+      const nomeVal = filterNome.value.toLowerCase();
+      const areaVal = filterArea.value.toLowerCase();
+      const itemVal = filterItem.value;
+      const possuiVal = filterPossui.value;
+
+      const filteredRows = sheetData.rows.filter(r=>{
+        let ok = true;
+        if(nomeVal && !(r["Nome"]||r["Nome completo"]||"").toLowerCase().includes(nomeVal)) ok=false;
+        if(areaVal && !(r["Área"]||"").toLowerCase().includes(areaVal)) ok=false;
+        if(itemVal){
+          const possuiCol = r[`${itemVal} Possui`]||"";
+          if(possuiVal==="sim" && !possuiCol.toLowerCase().includes("sim")) ok=false;
+          if(possuiVal==="nao" && possuiCol.toLowerCase().includes("sim")) ok=false;
+        }
+        return ok;
+      });
+      buildReportTable(filteredRows);
+    }
+    [filterNome, filterArea, filterItem, filterPossui].forEach(el=>el.addEventListener("input",applyFilters));
+  }
+
+  // -------- PDF
+  btnExportPDF.addEventListener("click",()=>{
+    const { jsPDF } = window.jspdf;
+    const doc=new jsPDF();
+    doc.text("Relatório de Uniformes - Residencial Nascentes",14,16);
+    const rowsPDF=Object.entries(groupedData).map(([nome,data])=>[nome,data.area,data.itens.join(", ")]);
+    doc.autoTable({head:[["Colaborador","Área","Uniformes"]],body:rowsPDF,startY:24,styles:{fontSize:9,cellPadding:2}});
+    doc.save("Relatorio-Uniformes.pdf");
   });
 
 })();
 </script>
 </body>
 </html>
+
 
 
