@@ -56,6 +56,16 @@ footer{padding:12px;text-align:center;color:var(--muted)}
 .card canvas{width:100% !important; min-height:200px; max-height:320px}
 #dashCharts .card{min-height:320px}
 
+/* Modal popup */
+#modalOverlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:1000;
+}
+#modalContent{
+  background:#fff;padding:20px;border-radius:12px;max-width:500px;width:90%;max-height:80%;overflow:auto;
+}
+#modalContent h3{margin-top:0;}
+#modalContent ul{padding-left:20px;}
+#modalContent button{margin-top:10px;background:#ef4444;}
 @media(max-width:900px){
   main{flex-direction:column;padding:12px}
   nav{width:100%;order:2}
@@ -117,8 +127,8 @@ footer{padding:12px;text-align:center;color:var(--muted)}
           <canvas id="chartUniformeArea"></canvas>
         </div>
         <div class="card">
-          <h2><i class="fas fa-user-check text-emerald-600"></i> Colaboradores Atendidos</h2>
-          <canvas id="chartColaboradores"></canvas>
+          <h2><i class="fas fa-user-check text-emerald-600"></i> Colaboradores que preencheram o link</h2>
+          <div id="totalPreencheram" style="font-size:2rem; font-weight:700; text-align:center; padding:40px 0;"></div>
         </div>
         <div class="card">
           <h2><i class="fas fa-chart-line text-purple-600"></i> Evolução de Entregas</h2>
@@ -169,6 +179,15 @@ footer{padding:12px;text-align:center;color:var(--muted)}
   </section>
 </main>
 
+<!-- Modal popup -->
+<div id="modalOverlay">
+  <div id="modalContent">
+    <h3>Colaboradores</h3>
+    <ul id="modalList"></ul>
+    <button onclick="document.getElementById('modalOverlay').style.display='none'">Fechar</button>
+  </div>
+</div>
+
 <footer>@Residencial Nascentes 2025 - By Josué Amaral</footer>
 
 <script>
@@ -182,7 +201,7 @@ footer{padding:12px;text-align:center;color:var(--muted)}
   const btnLogin=document.getElementById("btnLogin");
   const loginUser=document.getElementById("loginUser");
   const loginPass=document.getElementById("loginPass");
-  const loginMessage=document.getElementById("loginMessage");
+    const loginMessage=document.getElementById("loginMessage");
   const logoutBtn=document.getElementById("logout");
   const navInicio=document.getElementById("navInicio");
   const navDash=document.getElementById("navDash");
@@ -193,6 +212,7 @@ footer{padding:12px;text-align:center;color:var(--muted)}
   const reportHead=document.getElementById("reportHead");
   const reportBody=document.getElementById("reportBody");
   const btnExportPDF=document.getElementById("btnExportPDF");
+  const totalPreencheramDiv=document.getElementById("totalPreencheram");
 
   const filterNome = document.getElementById("filterNome");
   const filterArea = document.getElementById("filterArea");
@@ -233,124 +253,171 @@ footer{padding:12px;text-align:center;color:var(--muted)}
 
   // -------- INÍCIO (gráficos principais)
   function buildInicio(){
-  const tipos=["Gandola Possui","Camisa Preta Possui","Camisa Azul Possui","Calça Possui","Coturno Possui","Boné Possui","Cinto Possui"];
-  const labelsTipo=["Gandola","Camisa Preta","Camisa Azul","Calça","Coturno","Boné","Cinto"];
-  const countsTipo=labelsTipo.map((lbl,i)=>{
-    let c=0; sheetData.rows.forEach(r=>{if(String(r[tipos[i]]||"").toLowerCase().includes("sim")) c++;});
-    return c;
-  });
+    const tipos=["Gandola Possui","Camisa Preta Possui","Camisa Azul Possui","Calça Possui","Coturno Possui","Boné Possui","Cinto Possui"];
+    const labelsTipo=["Gandola","Camisa Preta","Camisa Azul","Calça","Coturno","Boné","Cinto"];
+    const countsTipo=labelsTipo.map((lbl,i)=>{
+      let c=0; sheetData.rows.forEach(r=>{if(String(r[tipos[i]]||"").toLowerCase().includes("sim")) c++;});
+      return c;
+    });
 
-  new Chart(document.getElementById("chartTipoUniforme"),{
-    type:"doughnut",
-    data:{labels:labelsTipo,datasets:[{data:countsTipo, backgroundColor:["#3b82f6","#6b7280","#1d4ed8","#10b981","#ef4444","#f59e0b","#8b5cf6"]}]},
-    options:{plugins:{legend:{position:"bottom"}}}
-  });
+    new Chart(document.getElementById("chartTipoUniforme"),{
+      type:"doughnut",
+      data:{labels:labelsTipo,datasets:[{data:countsTipo, backgroundColor:["#3b82f6","#6b7280","#1d4ed8","#10b981","#ef4444","#f59e0b","#8b5cf6"]}]},
+      options:{plugins:{legend:{position:"bottom"}}}
+    });
 
-  // Uniformes por área
-  const areaCounts={};
-  sheetData.rows.forEach(r=>{
-    const area=r["Área"]||"Sem área";
-    if(!areaCounts[area]) areaCounts[area]=0;
-    tipos.forEach(t=>{if(String(r[t]||"").toLowerCase().includes("sim")) areaCounts[area]++;});
-  });
-  new Chart(document.getElementById("chartUniformeArea"),{
-    type:"bar",
-    data:{labels:Object.keys(areaCounts),datasets:[{label:"Itens",data:Object.values(areaCounts),backgroundColor:"#34d399"}]},
-    options:{indexAxis:"y"}
-  });
+    // Uniformes por área
+    const areaCounts={};
+    sheetData.rows.forEach(r=>{
+      const area=r["Área"]||"Sem área";
+      if(!areaCounts[area]) areaCounts[area]=0;
+      tipos.forEach(t=>{if(String(r[t]||"").toLowerCase().includes("sim")) areaCounts[area]++;});
+    });
+    new Chart(document.getElementById("chartUniformeArea"),{
+      type:"bar",
+      data:{labels:Object.keys(areaCounts),datasets:[{label:"Itens",data:Object.values(areaCounts),backgroundColor:"#34d399"}]},
+      options:{indexAxis:"y"}
+    });
 
-  // -------- NOVO CARD: Colaboradores que preencheram o link --------
- // -------- NOVO CARD: Colaboradores que preencheram o link (sem duplicados) --------
-const nomesUnicos = new Set();
-sheetData.rows.forEach(r=>{
-  const nome = r["Nome"] || r["Nome completo"] || null;
-  if(nome) nomesUnicos.add(nome.trim());
-});
-const totalPreencheram = nomesUnicos.size;
+    // -------- NOVO CARD: Colaboradores que preencheram o link --------
+    const nomesUnicos = new Set();
+    sheetData.rows.forEach(r=>{
+      const nome = r["Nome"] || r["Nome completo"] || null;
+      if(nome) nomesUnicos.add(nome.trim());
+    });
+    totalPreencheramDiv.textContent = nomesUnicos.size;
 
-const cardColab = document.querySelector("#chartColaboradores").parentNode; // Mantém o mesmo card
-cardColab.innerHTML = `<h2><i class="fas fa-user-check text-emerald-600"></i> Colaboradores que preencheram o link</h2>
-                       <div style="font-size:2rem; font-weight:700; text-align:center; padding:40px 0;">${totalPreencheram}</div>`;
-
-
-  // Evolução (contagem por mês)
-  const evoCounts={};
-  sheetData.rows.forEach(r=>{
-    const d=r["Data"]||""; 
-    if(d){
-      const mes=d.substring(3,5)+"/"+d.substring(6,10);
-      if(!evoCounts[mes]) evoCounts[mes]=0;
-      if(tipos.some(t=>String(r[t]||"").toLowerCase().includes("sim"))) evoCounts[mes]++;
-    }
-  });
-  new Chart(document.getElementById("chartEvolucao"),{
-    type:"line",
-    data:{labels:Object.keys(evoCounts), datasets:[{label:"Entregas", data:Object.values(evoCounts), borderColor:"#8b5cf6", backgroundColor:"#ddd6fe"}]},
-    options:{responsive:true, maintainAspectRatio:false}
-  });
-}
-
-  // -------- DASHBOARD (gráficos por item)
-  function buildDash(){
-    const dashRoot=document.getElementById("dashCharts"); dashRoot.innerHTML="";
-    const items=[{key:"Gandola Possui",label:"Gandola"},{key:"Camisa Preta Possui",label:"Camisa Preta"},{key:"Camisa Azul Possui",label:"Camisa Azul"},{key:"Calça Possui",label:"Calça"},{key:"Coturno Possui",label:"Coturno"},{key:"Sapatênis Possui",label:"Sapatênis/Sapatilhas"},{key:"Boné Possui",label:"Boné"},{key:"Cinto Possui",label:"Cinto"},{key:"Fivela Possui",label:"Fivela"},{key:"Blusa Térmica Possui",label:"Blusa Térmica"}];
-    items.forEach(it=>{
-      let sim=0,nao=0;
-      sheetData.rows.forEach(r=>{
-        const v=r[it.key];
-        if(v){if(String(v).toLowerCase().includes("sim")) sim++; else nao++;}
-      });
-      const card=document.createElement("div");
-      card.className="card"; card.innerHTML=`<h4>${it.label}</h4><canvas></canvas>`;
-      dashRoot.appendChild(card);
-      new Chart(card.querySelector("canvas").getContext("2d"),{type:'pie',data:{labels:["Sim","Não"],datasets:[{data:[sim,nao],backgroundColor:['#0077cc','#ccc']}]},options:{responsive:true,maintainAspectRatio:false}});
+    // Evolução (contagem por mês)
+    const evoCounts={};
+    sheetData.rows.forEach(r=>{
+      const d=r["Data"]||""; 
+      if(d){
+        const mes=d.substring(3,5)+"/"+d.substring(6,10);
+        if(!evoCounts[mes]) evoCounts[mes]=0;
+        if(tipos.some(t=>String(r[t]||"").toLowerCase().includes("sim"))) evoCounts[mes]++;
+      }
+    });
+    new Chart(document.getElementById("chartEvolucao"),{
+      type:"line",
+      data:{labels:Object.keys(evoCounts), datasets:[{label:"Entregas", data:Object.values(evoCounts), borderColor:"#8b5cf6", backgroundColor:"#ddd6fe"}]},
+      options:{responsive:true, maintainAspectRatio:false}
     });
   }
 
-  // -------- RELATÓRIO
-  // -------- RELATÓRIO (agrupado por colaborador) com numeração
-function buildReportTable(rows){
-  groupedData={};
-  rows.forEach(r=>{
-    const nome=r["Nome"]||r["Nome completo"]||"Sem nome";
-    if(!groupedData[nome]) groupedData[nome]={area:r["Área"]||"Sem área",itens:[]};
+  // -------- DASHBOARD (gráficos por item - colaboradores que têm / não têm)
+function buildDash(){
+  const dashRoot=document.getElementById("dashCharts"); 
+  dashRoot.innerHTML="";
 
-    const itens=[
-      {possui:"Gandola Possui",tam:"Gandola Tamanho",label:"Gandola"},
-      {possui:"Camisa Preta Possui",tam:"Camisa Preta Tamanho",label:"Camisa Preta"},
-      {possui:"Camisa Azul Possui",tam:"Camisa Azul Tamanho",label:"Camisa Azul"},
-      {possui:"Calça Possui",tam:"Calça Tamanho",label:"Calça"},
-      {possui:"Coturno Possui",tam:"Coturno Tamanho",label:"Coturno"},
-      {possui:"Sapatênis Possui",tam:"Sapatênis Tamanho",label:"Sapatênis"},
-      {possui:"Boné Possui",tam:"Boné Quantidade",label:"Boné"},
-      {possui:"Cinto Possui",tam:"Cinto Quantidade",label:"Cinto"},
-      {possui:"Fivela Possui",tam:"Fivela Quantidade",label:"Fivela"},
-      {possui:"Blusa Térmica Possui",tam:"Blusa Térmica Tamanho",label:"Blusa Térmica"}
-    ];
-    itens.forEach(it=>{
-      const possui=r[it.possui]||"";
-      const tam=r[it.tam]||"";
-      if(possui||tam) groupedData[nome].itens.push(`${it.label}: ${possui}${tam?` (${tam})`:""}`);
+  const items=[
+    {key:"Gandola Possui",label:"Gandola",icon:"fas fa-tshirt"},
+    {key:"Camisa Preta Possui",label:"Camisa Preta",icon:"fas fa-shirt"},
+    {key:"Camisa Azul Possui",label:"Camisa Azul",icon:"fas fa-shirt"},
+    {key:"Calça Possui",label:"Calça",icon:"fas fa-person-boots"},
+    {key:"Coturno Possui",label:"Coturno",icon:"fas fa-shoe-prints"},
+    {key:"Sapatênis Possui",label:"Sapatênis/Sapatilhas",icon:"fas fa-sneaker"},
+    {key:"Boné Possui",label:"Boné",icon:"fas fa-hat-cowboy"},
+    {key:"Cinto Possui",label:"Cinto",icon:"fas fa-belt"},
+    {key:"Fivela Possui",label:"Fivela",icon:"fas fa-buckle"},
+    {key:"Blusa Térmica Possui",label:"Blusa Térmica",icon:"fas fa-sweater"}
+  ];
+
+  items.forEach(it=>{
+    const colaboradoresSim = new Set();
+    const colaboradoresNao = new Set();
+    
+    // Agrupando nomes únicos
+    sheetData.rows.forEach(r=>{
+      const nome = (r["Nome"]||r["Nome completo"]||"Sem nome").trim();
+      const val = r[it.key] || "";
+      if(val.toLowerCase().includes("sim")) colaboradoresSim.add(nome);
+      else colaboradoresNao.add(nome);
+    });
+
+    // Garantir que o mesmo colaborador não esteja nas duas listas
+    colaboradoresNao.forEach(nome=>{
+      if(colaboradoresSim.has(nome)) colaboradoresNao.delete(nome);
+    });
+
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<h4><i class="${it.icon}"></i> ${it.label}</h4><canvas></canvas>`;
+    dashRoot.appendChild(card);
+
+    const ctx = card.querySelector("canvas").getContext("2d");
+    new Chart(ctx,{
+      type:'pie',
+      data:{
+        labels:["Possui","Não Possui"],
+        datasets:[{
+          data:[colaboradoresSim.size, colaboradoresNao.size],
+          backgroundColor:['#0077cc','#ccc']
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        onClick: function(evt, activeEls){
+          if(activeEls.length>0){
+            const index = activeEls[0].index;
+            const lista = index===0 ? Array.from(colaboradoresSim) : Array.from(colaboradoresNao);
+            const modal = document.getElementById("modalOverlay");
+            const modalList = document.getElementById("modalList");
+            modalList.innerHTML="";
+            lista.forEach(nome=>{
+              const li = document.createElement("li"); li.textContent=nome; modalList.appendChild(li);
+            });
+            modal.style.display="flex";
+          }
+        }
+      }
     });
   });
-
-  reportHead.innerHTML=`
-    <tr>
-      <th style='background:#f1f5f9'>#</th>
-      <th style='background:#f1f5f9'>Colaborador</th>
-      <th style='background:#f1f5f9'>Área</th>
-      <th style='background:#f1f5f9'>Uniformes</th>
-    </tr>`;
-  
-  reportBody.innerHTML="";
-  let count=1;
-  Object.entries(groupedData).forEach(([nome,data])=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${count}</td><td>${nome}</td><td>${data.area}</td><td>${data.itens.join(", ")}</td>`;
-    reportBody.appendChild(tr);
-    count++;
-  });
 }
+
+  // -------- RELATÓRIO
+  function buildReportTable(rows){
+    groupedData={};
+    rows.forEach(r=>{
+      const nome=r["Nome"]||r["Nome completo"]||"Sem nome";
+      if(!groupedData[nome]) groupedData[nome]={area:r["Área"]||"Sem área",itens:[]};
+
+      const itens=[
+        {possui:"Gandola Possui",tam:"Gandola Tamanho",label:"Gandola"},
+        {possui:"Camisa Preta Possui",tam:"Camisa Preta Tamanho",label:"Camisa Preta"},
+        {possui:"Camisa Azul Possui",tam:"Camisa Azul Tamanho",label:"Camisa Azul"},
+        {possui:"Calça Possui",tam:"Calça Tamanho",label:"Calça"},
+        {possui:"Coturno Possui",tam:"Coturno Tamanho",label:"Coturno"},
+        {possui:"Sapatênis Possui",tam:"Sapatênis Tamanho",label:"Sapatênis"},
+        {possui:"Boné Possui",tam:"Boné Quantidade",label:"Boné"},
+        {possui:"Cinto Possui",tam:"Cinto Quantidade",label:"Cinto"},
+        {possui:"Fivela Possui",tam:"Fivela Quantidade",label:"Fivela"},
+        {possui:"Blusa Térmica Possui",tam:"Blusa Térmica Tamanho",label:"Blusa Térmica"}
+      ];
+      itens.forEach(it=>{
+        const possui=r[it.possui]||"";
+        const tam=r[it.tam]||"";
+        if(possui||tam) groupedData[nome].itens.push(`${it.label}: ${possui}${tam?` (${tam})`:""}`);
+      });
+    });
+
+    reportHead.innerHTML=`
+      <tr>
+        <th style='background:#f1f5f9'>#</th>
+        <th style='background:#f1f5f9'>Colaborador</th>
+        <th style='background:#f1f5f9'>Área</th>
+        <th style='background:#f1f5f9'>Uniformes</th>
+      </tr>`;
+    
+    reportBody.innerHTML="";
+    let count=1;
+    Object.entries(groupedData).forEach(([nome,data])=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${count}</td><td>${nome}</td><td>${data.area}</td><td>${data.itens.join(", ")}</td>`;
+      reportBody.appendChild(tr);
+      count++;
+    });
+  }
 
   // -------- FILTROS DINÂMICOS
   function setupFilters(){
@@ -390,6 +457,8 @@ function buildReportTable(rows){
 </script>
 </body>
 </html>
+
+
 
 
 
