@@ -213,7 +213,7 @@ footer{padding:12px;text-align:center;color:var(--muted)}
   const btnLogin=document.getElementById("btnLogin");
   const loginUser=document.getElementById("loginUser");
   const loginPass=document.getElementById("loginPass");
-    const loginMessage=document.getElementById("loginMessage");
+  const loginMessage=document.getElementById("loginMessage");
   const logoutBtn=document.getElementById("logout");
   const navInicio=document.getElementById("navInicio");
   const navDash=document.getElementById("navDash");
@@ -389,49 +389,65 @@ onClick: function(evt, activeEls){
   });
 }
 
-  // -------- RELATÓRIO
-  function buildReportTable(rows){
-    groupedData={};
-    rows.forEach(r=>{
-      const nome=r["Nome"]||r["Nome completo"]||"Sem nome";
-      if(!groupedData[nome]) groupedData[nome]={area:r["Área"]||"Sem área",itens:[]};
+// -------- RELATÓRIO AGRUPADO POR ITEM (sem repetição)
+function buildReportTable(rows){
+  groupedData = {};
 
-      const itens=[
-        {possui:"Gandola Possui",tam:"Gandola Tamanho",label:"Gandola"},
-        {possui:"Camisa Preta Possui",tam:"Camisa Preta Tamanho",label:"Camisa Preta"},
-        {possui:"Camisa Azul Possui",tam:"Camisa Azul Tamanho",label:"Camisa Azul"},
-        {possui:"Calça Possui",tam:"Calça Tamanho",label:"Calça"},
-        {possui:"Coturno Possui",tam:"Coturno Tamanho",label:"Coturno"},
-        {possui:"Sapatênis Possui",tam:"Sapatênis Tamanho",label:"Sapatênis"},
-        {possui:"Boné Possui",tam:"Boné Quantidade",label:"Boné"},
-        {possui:"Cinto Possui",tam:"Cinto Quantidade",label:"Cinto"},
-        {possui:"Fivela Possui",tam:"Fivela Quantidade",label:"Fivela"},
-        {possui:"Blusa Térmica Possui",tam:"Blusa Térmica Tamanho",label:"Blusa Térmica"}
-      ];
-      itens.forEach(it=>{
-        const possui=r[it.possui]||"";
-        const tam=r[it.tam]||"";
-        if(possui||tam) groupedData[nome].itens.push(`${it.label}: ${possui}${tam?` (${tam})`:""}`);
+  const itensMap = {
+    "Gandola": ["Gandola Possui","Gandola Quantidade","Gandola Tamanho"],
+    "Camisa Preta": ["Camisa Preta Possui","Camisa Preta Quantidade","Camisa Preta Tamanho"],
+    "Camisa Azul": ["Camisa Azul Possui","Camisa Azul Quantidade","Camisa Azul Tamanho"],
+    "Calça": ["Calça Possui","Calça Quantidade","Calça Tamanho"],
+    "Coturno": ["Coturno Possui","Coturno Quantidade","Coturno Tamanho"],
+    "Sapatênis": ["Sapatênis Possui","Sapatênis Quantidade","Sapatênis Tamanho"],
+    "Boné": ["Boné Possui","Boné Quantidade"],
+    "Cinto": ["Cinto Possui","Cinto Quantidade"],
+    "Fivela": ["Fivela Possui","Fivela Quantidade"],
+    "Blusa Térmica": ["Blusa Térmica Possui","Blusa Térmica Quantidade","Blusa Térmica Tamanho"]
+  };
+
+  rows.forEach(r=>{
+    const nome = (r["Nome"] || r["Nome completo"] || "Sem nome").toString().trim();
+    const area = (r["Área"] || r["Area"] || "Sem área").toString().trim();
+
+    if(!groupedData[nome]) groupedData[nome] = { area: area, itens: new Set() };
+
+    Object.entries(itensMap).forEach(([item, cols])=>{
+      let partes = [];
+      cols.forEach(c=>{
+        if(r[c] && String(r[c]).trim() !== ""){
+          const chave = c.split(" ").slice(-1)[0]; // última palavra = Possui, Quantidade ou Tamanho
+          partes.push(`${chave}: ${r[c]}`);
+        }
       });
+      if(partes.length>0){
+        groupedData[nome].itens.add(`${item} - ${partes.join("; ")}`);
+      }
     });
+  });
 
-    reportHead.innerHTML=`
-      <tr>
-        <th style='background:#f1f5f9'>#</th>
-        <th style='background:#f1f5f9'>Colaborador</th>
-        <th style='background:#f1f5f9'>Área</th>
-        <th style='background:#f1f5f9'>Uniformes</th>
-      </tr>`;
-    
-    reportBody.innerHTML="";
-    let count=1;
-    Object.entries(groupedData).forEach(([nome,data])=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML=`<td>${count}</td><td>${nome}</td><td>${data.area}</td><td>${data.itens.join(", ")}</td>`;
-      reportBody.appendChild(tr);
-      count++;
-    });
-  }
+  // Cabeçalho
+  reportHead.innerHTML=`
+    <tr>
+      <th style='background:#f1f5f9'>#</th>
+      <th style='background:#f1f5f9'>Colaborador</th>
+      <th style='background:#f1f5f9'>Área</th>
+      <th style='background:#f1f5f9'>Uniformes</th>
+    </tr>`;
+
+  // Corpo
+  reportBody.innerHTML="";
+  let count=1;
+  Object.entries(groupedData).forEach(([nome,data])=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${count}</td>
+                  <td>${nome}</td>
+                  <td>${data.area}</td>
+                  <td>${[...data.itens].join(" | ")}</td>`;
+    reportBody.appendChild(tr);
+    count++;
+  });
+}
 
   // -------- FILTROS DINÂMICOS
   function setupFilters(){
@@ -462,7 +478,7 @@ onClick: function(evt, activeEls){
     const { jsPDF } = window.jspdf;
     const doc=new jsPDF();
     doc.text("Relatório de Uniformes - Residencial Nascentes",14,16);
-    const rowsPDF=Object.entries(groupedData).map(([nome,data])=>[nome,data.area,data.itens.join(", ")]);
+    const rowsPDF = Object.entries(groupedData).map(([nome,data])=>[nome,data.area,[...data.itens].join(", ")]);
     doc.autoTable({head:[["Colaborador","Área","Uniformes"]],body:rowsPDF,startY:24,styles:{fontSize:9,cellPadding:2}});
     doc.save("Relatorio-Uniformes.pdf");
   });
